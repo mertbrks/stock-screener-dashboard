@@ -1,0 +1,24 @@
+{
+  "hisseler": ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "TSLA", "AVGO", "AMD", "JPM", "V", "LLY", "COST", "NFLX", "KO"],
+  "madenler": {
+    "GC=F": "Altın (ons)",
+    "SI=F": "Gümüş (ons)",
+    "PL=F": "Platin (ons)",
+    "PA=F": "Paladyum (ons)",
+    "USDTRY=X": "Dolar / TL"
+  },
+  "bist": {
+    "XU100.IS": "BIST 100 endeksi",
+    "THYAO.IS": "Türk Hava Yolları",
+    "ASELS.IS": "Aselsan",
+    "BIMAS.IS": "BİM",
+    "KCHOL.IS": "Koç Holding",
+    "GARAN.IS": "Garanti BBVA",
+    "AKBNK.IS": "Akbank",
+    "TUPRS.IS": "Tüpraş",
+    "EREGL.IS": "Ereğli Demir Çelik",
+    "SISE.IS": "Şişecam",
+    "FROTO.IS": "Ford Otosan"
+  },
+  "dashboard_ac": true
+}

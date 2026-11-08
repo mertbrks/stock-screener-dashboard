@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hisse Takip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --sayfa:#eef1f5;--yuzey:#fff;--murekkep:#0f1b2d;--ikincil:#46536a;--soluk:#738097;--cizgi:#dfe4eb;--eksen:#c3cad5;
+  --vurgu:#2a78d6;--vurgu-zemin:#e3eefb;
+  --iyi:#006300;--iyi-zemin:#e2f3e2;--orta:#8a5a00;--orta-zemin:#fdf0d2;--kotu:#c13232;--kotu-zemin:#fbe4e4;
+  --a-gal:#1c5cab;--a-al:#86b6ef;--a-tut:#c9c7c0;--a-sat:#ef9a99;--a-gsat:#d03b3b;
+  --bolge-z:#f6e9e9;--bolge-i:#f8f0dc;--bolge-g:#e4f1e4;
+}
+@media (prefers-color-scheme:dark){:root{
+  --sayfa:#0c111a;--yuzey:#151c28;--murekkep:#e8edf4;--ikincil:#b3bdcc;--soluk:#7f8a9c;--cizgi:#253042;--eksen:#38455a;
+  --vurgu:#5598e7;--vurgu-zemin:#1b2b44;
+  --iyi:#3fbf5f;--iyi-zemin:#14301d;--orta:#fab219;--orta-zemin:#33280f;--kotu:#ef7272;--kotu-zemin:#3a1a1c;
+  --a-gal:#86b6ef;--a-al:#2f64a8;--a-tut:#4a4a46;--a-sat:#9e3b3b;--a-gsat:#ef7272;
+  --bolge-z:#2a1b1f;--bolge-i:#2b2516;--bolge-g:#16291d;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--sayfa);color:var(--murekkep);font:16px/1.55 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 64px}
+h1,h2,h3,.baslik{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;font-weight:700;letter-spacing:-.01em}
+h2{font-size:22px;margin:48px 0 6px}
+h3{font-size:17px;margin:0 0 10px}
+.alt{color:var(--soluk);font-size:14px;margin:0 0 16px}
+a{color:var(--vurgu)}
+:focus-visible{outline:2px solid var(--vurgu);outline-offset:2px}
+.say{font-variant-numeric:tabular-nums}
+
+/* üst */
+.ust{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--soluk);font-size:14px}
+.ust b{color:var(--murekkep);font-family:"Bricolage Grotesque",sans-serif;font-size:16px}
+.giris{margin:40px 0 0;max-width:30ch;font-size:clamp(30px,4.6vw,50px);line-height:1.08}
+.giris span{display:block;color:var(--soluk);font-weight:500}
+.ozet{max-width:62ch;font-size:18px;color:var(--ikincil);margin:18px 0 0}
+.ozet strong{color:var(--murekkep);font-weight:600}
+.not{font-size:13px;color:var(--soluk);margin:10px 0 0}
+
+/* puan cetveli */
+.cetvel-kap{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:14px;padding:22px 22px 14px;margin-top:28px}
+.cetvel{position:relative}
+.bolgeler{position:absolute;left:0;right:0;bottom:26px;top:0;display:flex}
+.bolgeler div{height:100%}
+.nokta{position:absolute;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;padding:2px 4px;cursor:pointer;color:var(--murekkep);font:600 12px "IBM Plex Sans",sans-serif;border-radius:6px}
+.nokta i{width:11px;height:11px;border-radius:50%;background:var(--murekkep);box-shadow:0 0 0 2px var(--yuzey)}
+.nokta:hover i,.nokta.secili i{background:var(--vurgu);transform:scale(1.25)}
+.nokta.secili{color:var(--vurgu)}
+.eksen{position:absolute;left:0;right:0;bottom:0;height:26px;border-top:1px solid var(--eksen);font-size:12px;color:var(--soluk)}
+.eksen span{position:absolute;top:4px;transform:translateX(-50%)}
+.bolge-ad{position:absolute;top:6px;font-size:12px;font-weight:600;padding-left:8px}
+
+/* sinyal etiketi: ikon + yazı, renk tek başına anlam taşımaz */
+.sinyal{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;padding:2px 9px 2px 7px;border-radius:999px;white-space:nowrap}
+.s-g{color:var(--iyi);background:var(--iyi-zemin)}.s-i{color:var(--orta);background:var(--orta-zemin)}.s-z{color:var(--kotu);background:var(--kotu-zemin)}
+.art{color:var(--iyi)}.eks{color:var(--kotu)}
+
+/* öne çıkanlar */
+.one{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.one button{all:unset;cursor:pointer;background:var(--yuzey);border:1px solid var(--cizgi);border-radius:14px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:10px}
+.one button:hover{border-color:var(--vurgu)}
+.one button:focus-visible{outline:2px solid var(--vurgu)}
+.one .bas{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.one .sem{font:700 24px "Bricolage Grotesque",sans-serif;line-height:1}
+.one .ad{color:var(--soluk);font-size:14px}
+.one .buyuk{font:700 34px "Bricolage Grotesque",sans-serif;line-height:1}
+.one .buyuk small{font:500 14px "IBM Plex Sans",sans-serif;color:var(--soluk)}
+.neden{margin:0;padding:0;list-style:none;font-size:14px;color:var(--ikincil);display:grid;gap:4px;border-top:1px solid var(--cizgi);padding-top:10px}
+
+/* tablo */
+.filtre{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filtre button{font:500 14px "IBM Plex Sans",sans-serif;color:var(--ikincil);background:var(--yuzey);border:1px solid var(--cizgi);border-radius:999px;padding:5px 14px;cursor:pointer}
+.filtre button[aria-pressed=true]{background:var(--murekkep);color:var(--yuzey);border-color:var(--murekkep)}
+.kutu{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:14px}
+.tablo-kap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:11px 14px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--cizgi)}
+tbody tr:last-child td{border-bottom:0}
+th{font-size:13px;color:var(--soluk);font-weight:500}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:color-mix(in srgb,var(--vurgu) 6%,transparent)}
+tbody tr.secili{background:var(--vurgu-zemin)}
+td .ad{color:var(--soluk);font-size:14px;margin-left:6px}
+.puan-hc{font-weight:600}
+.fark{font-size:12px;margin-left:4px}
+.al-oran{display:inline-flex;align-items:center;gap:8px}
+.mini{width:64px;height:6px;border-radius:3px;background:var(--cizgi);overflow:hidden}
+.mini i{display:block;height:100%;background:var(--a-gal)}
+
+/* detay */
+.detay{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin-top:14px;align-items:start}
+.detay>.kutu{padding:20px;min-width:0}
+.d-bas{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.d-bas img{width:40px;height:40px;border-radius:10px;background:#fff;object-fit:contain;border:1px solid var(--cizgi)}
+.d-bas .sem{font:700 26px "Bricolage Grotesque",sans-serif;line-height:1}
+.d-bas .ad{color:var(--soluk);font-size:14px}
+.d-fiyat{margin-left:auto;text-align:right}
+.d-fiyat b{font:700 26px "Bricolage Grotesque",sans-serif;display:block;line-height:1.1}
+.denklem{font-size:15px;color:var(--ikincil);margin:0 0 12px}
+.denklem b{color:var(--murekkep)}
+.bilesen{display:grid;grid-template-columns:150px 1fr 34px;align-items:center;gap:10px;font-size:14px;margin:6px 0}
+.bilesen .ray{height:8px;background:var(--cizgi);border-radius:4px;overflow:hidden}
+.bilesen .ray i{display:block;height:100%;background:var(--vurgu);border-radius:0 4px 4px 0}
+.bilesen span:last-child{text-align:right;font-weight:600}
+.blok{margin-top:24px}
+.yigin{display:flex;gap:2px;height:14px;margin:4px 0 10px}
+.yigin i{height:100%}
+.yigin i:first-child{border-radius:4px 0 0 4px}.yigin i:last-child{border-radius:0 4px 4px 0}
+.lejant{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ikincil)}
+.lejant span{display:inline-flex;align-items:center;gap:6px}
+.lejant i{width:10px;height:10px;border-radius:2px}
+.aralik{position:relative;height:6px;background:var(--cizgi);border-radius:3px;margin:28px 0 8px}
+.aralik i{position:absolute;top:-6px;width:3px;height:18px;background:var(--vurgu);border-radius:2px;transform:translateX(-50%)}
+.aralik span{position:absolute;bottom:14px;transform:translateX(-50%);font-size:12px;font-weight:600;color:var(--vurgu);white-space:nowrap}
+.uclar{display:flex;justify-content:space-between;font-size:13px;color:var(--soluk)}
+dl{display:grid;grid-template-columns:1fr auto;gap:10px 16px;margin:0;font-size:15px}
+dt small{display:block;color:var(--soluk);font-size:12.5px}
+dd{margin:0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.grafik{height:170px;margin-top:6px}
+.bos{border:1px dashed var(--eksen);border-radius:10px;padding:18px;color:var(--ikincil);font-size:14px}
+.haber{display:block;color:inherit;text-decoration:none;padding:11px 0;border-top:1px solid var(--cizgi)}
+.haber:first-of-type{border-top:0}
+.haber:hover .h-bas{text-decoration:underline}
+.h-kay{display:block;color:var(--soluk);font-size:13px}
+
+/* gezinti */
+.gezinti{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.gezinti a{font-size:14px;font-weight:500;color:var(--ikincil);text-decoration:none;background:var(--yuzey);border:1px solid var(--cizgi);border-radius:999px;padding:5px 14px}
+.gezinti a:hover{border-color:var(--vurgu);color:var(--vurgu)}
+h2[id],.cetvel-kap{scroll-margin-top:16px}
+
+/* maden / bist kartları */
+.piyasa-kart{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.piyasa-kart.tek{grid-template-columns:1fr}
+.pk{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:14px;padding:18px;display:grid;gap:10px}
+.pk .bas{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pk .ad{font:700 17px "Bricolage Grotesque",sans-serif}
+.pk .deger{font:700 28px "Bricolage Grotesque",sans-serif;line-height:1}
+.pk .deger small{font:500 14px "IBM Plex Sans",sans-serif;color:var(--soluk);margin-left:4px}
+.pk.vurgulu{border-color:var(--vurgu)}
+.donem{display:grid;grid-template-columns:repeat(3,1fr);font-size:13px;color:var(--soluk);border-top:1px solid var(--cizgi);padding-top:10px}
+.donem b{display:block;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.seyir{display:block;width:100%;height:56px;overflow:visible}
+.seyir polyline{fill:none;stroke:var(--vurgu);stroke-width:2;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.tek .pk{grid-template-columns:1fr 2fr;align-items:center;column-gap:28px}
+.tek .seyir{height:90px}
+table.bist .seyir{width:120px;height:28px;display:inline-block;vertical-align:middle}
+table.bist tbody tr{cursor:default}
+table.bist tbody tr:hover{background:none}
+table.bist td .ad{display:block;margin:0;font-size:13px}
+
+/* sözlük */
+details{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:14px;padding:4px 20px;margin-top:48px}
+summary{cursor:pointer;font:700 18px "Bricolage Grotesque",sans-serif;padding:14px 0}
+details dl{grid-template-columns:200px 1fr;padding:0 0 18px;font-size:15px}
+details dd{text-align:left;font-weight:400;color:var(--ikincil)}
+details dt{font-weight:600}
+
+@media (max-width:860px){.one{grid-template-columns:1fr}.detay{grid-template-columns:1fr}.piyasa-kart{grid-template-columns:1fr 1fr}.tek .pk{grid-template-columns:1fr}}
+@media (max-width:560px){
+  .piyasa-kart{gap:10px}
+  .pk{padding:14px 12px;gap:8px}
+  .pk .bas{flex-direction:column;gap:0}
+  .pk .ad{font-size:15px}
+  .pk .deger{font-size:21px}
+  .seyir{height:40px}
+  .piyasa-kart:not(.tek) .donem{grid-template-columns:1fr 1fr}
+  .piyasa-kart:not(.tek) .donem>span:first-child{display:none}
+  table.bist td:first-child{white-space:normal}
+}
+@media (max-width:640px){
+  .gizle-m{display:none}
+  th,td{padding:10px}
+  td .ad,td .sinyal .yazi{display:none}
+  td .sinyal{padding:2px 8px}
+  .bilesen{grid-template-columns:120px 1fr 30px}
+  .d-bas .ad{font-size:13px}
+  details dl{grid-template-columns:1fr}
+  details dd{margin-bottom:6px}
+}
+@media (prefers-reduced-motion:no-preference){.nokta i{transition:transform .15s}}
+</style>
+</head>
+<body>
+<main>
+  <div class="ust"><b>Hisse Takip</b><span id="guncel"></span></div>
+  <nav class="gezinti" aria-label="Bölümler"><a href="#abd">ABD hisseleri</a><a href="#madenler">Altın ve madenler</a><a href="#bist">Borsa İstanbul</a></nav>
+
+  <h1 class="giris" id="giris"></h1>
+  <p class="ozet" id="ozet"></p>
+  <p class="not">Bu sayfa Finnhub verisinden otomatik üretilen bir tarama aracıdır, yatırım tavsiyesi değildir. Puanın nasıl hesaplandığı sayfanın altında anlatılıyor.</p>
+
+  <div class="cetvel-kap" id="abd">
+    <h3>ABD hisseleri tek bakışta</h3>
+    <p class="alt" style="margin-bottom:8px">Her nokta bir hisse, sağa gittikçe puan yükseliyor. Bir noktaya tıklayınca ayrıntısı açılıyor.</p>
+    <div class="cetvel" id="cetvel"></div>
+  </div>
+
+  <h2>Öne çıkan üç hisse</h2>
+  <p class="alt">Bugünün en yüksek puanlıları ve puanlarının nereden geldiği.</p>
+  <div class="one" id="one"></div>
+
+  <h2>Takip listesi</h2>
+  <p class="alt">Bir satıra tıkla, aşağıda o hissenin ayrıntısı açılsın.</p>
+  <div class="filtre" id="filtre"></div>
+  <div class="kutu tablo-kap"><table>
+    <thead><tr>
+      <th>Hisse</th><th>Sinyal</th><th>Puan</th><th>Fiyat</th><th>Son gün</th>
+      <th class="gizle-m">13 hafta</th><th class="gizle-m">Al diyen analist</th><th class="gizle-m">F/K</th>
+    </tr></thead>
+    <tbody id="satirlar"></tbody>
+  </table></div>
+
+  <div class="detay" id="detay"></div>
+
+  <h2 id="madenler">Altın ve değerli madenler</h2>
+  <p class="alt">Ons fiyatları dolar cinsinden. Gram altın, ons fiyatı ve dolar kurundan hesaplanıyor. Çizgi son 3 ayın seyrini gösteriyor.</p>
+  <div class="piyasa-kart" id="maden-kart"></div>
+
+  <h2 id="bist">Borsa İstanbul</h2>
+  <p class="alt">Bu bölümde puan yok, çünkü Finnhub'ın ücretsiz planı BIST için analist verisi vermiyor. Yalnızca fiyat hareketi gösteriliyor, fiyatlar TL.</p>
+  <div class="piyasa-kart tek" id="bist-endeks"></div>
+  <div class="kutu tablo-kap" style="margin-top:14px"><table class="bist">
+    <thead><tr><th>Hisse</th><th>Fiyat</th><th>Son gün</th><th class="gizle-m">1 ay</th><th class="gizle-m">3 ay</th><th>1 yıl</th><th class="gizle-m">Son 3 ay</th></tr></thead>
+    <tbody id="bist-satir"></tbody>
+  </table></div>
+  <p class="not">Maden ve BIST verileri Yahoo Finance'ten alınıyor ve birkaç dakika gecikmeli olabilir.</p>
+
+  <details>
+    <summary>Bu sayfa nasıl okunur?</summary>
+    <dl>
+      <dt>Puan (0–100)</dt><dd>İki parçadan oluşur: analist görüşü %60, son 13 haftanın fiyat hareketi %40 ağırlıkla. 75 ve üstü güçlü sinyal, 60–74 izle, 60'ın altı zayıf.</dd>
+      <dt>Analist puanı</dt><dd>Hisseyi izleyen analistlerin son ayki tavsiyeleri. Herkes "güçlü al" derse 100, herkes "tut" derse 50, herkes "güçlü sat" derse 0.</dd>
+      <dt>Momentum puanı</dt><dd>Son 13 haftalık getiri. +%30 ve üstü 100, sıfır 50, −%30 ve altı 0.</dd>
+      <dt>Son gün</dt><dd>Bir önceki kapanışa göre fiyat değişimi. Sabah 9'da baktığında ABD borsasının bir önceki günkü hareketini gösterir.</dd>
+      <dt>F/K oranı</dt><dd>Fiyatın, hisse başına yıllık kârın kaç katı olduğu. Yüksekse piyasa güçlü büyüme bekliyor demektir; tek başına ucuz/pahalı demek değildir.</dd>
+      <dt>Beta</dt><dd>Hissenin piyasaya göre ne kadar oynak olduğu. 1 piyasa kadar, 1'in üstü daha sert, altı daha sakin.</dd>
+      <dt>52 haftalık aralık</dt><dd>Son bir yılın en düşük ve en yüksek fiyatı arasında bugünkü fiyatın yeri.</dd>
+      <dt>Bu bir tavsiye mi?</dt><dd>Hayır. Puan yalnızca iki göstergenin özeti. Şirketin bilançosu, sektörü ve senin risk durumun hesaba katılmıyor.</dd>
+    </dl>
+  </details>
+
+  <h2>Piyasa haberleri</h2>
+  <p class="alt">Genel piyasa gündemi, Finnhub'ın derlediği kaynaklardan.</p>
+  <div class="kutu" style="padding:6px 20px" id="piyasa"></div>
+</main>
+<script>
+const V = /*VERI*/null;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sayi = (x, d = 2) => x == null ? "–" : x.toLocaleString("tr-TR", {minimumFractionDigits: d, maximumFractionDigits: d});
+const sifir = (x, d = 2) => Math.abs(x) < 0.5 * 10 ** -d;  // yuvarlanınca 0 görünen değer işaretsiz kalır
+const yzd = (x, d = 2) => x == null ? "–" : `${sifir(x, d) ? "" : x > 0 ? "+" : "−"}%${sayi(Math.abs(x), d)}`;
+const renkli = (x, d = 2) => x == null ? "–" : `<span class="${sifir(x, d) ? "" : x > 0 ? "art" : "eks"}">${yzd(x, d)}</span>`;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SINYAL = {"Güçlü sinyal": ["s-g", "▲", "Güçlü"], "İzle": ["s-i", "●", "İzle"], "Zayıf": ["s-z", "▼", "Zayıf"]};
+const sinyal = h => { const [c, i, t] = SINYAL[h.etiket] || ["", "–", "Veri yok"]; return `<span class="sinyal ${c}" title="${t}"><span aria-hidden="true">${i}</span><span class="yazi">${t}</span></span>`; };
+const liste = a => a.length > 1 ? a.slice(0, -1).join(", ") + " ve " + a.at(-1) : a[0];
+
+const H = V.hisseler;
+const gunler = Object.keys(V.gecmis).sort();
+const dun = gunler.length > 1 ? V.gecmis[gunler[gunler.length - 2]] : null;
+const analistToplam = o => o ? o.strongBuy + o.buy + o.hold + o.sell + o.strongSell : 0;
+
+// --- giriş ---
+const saat = new Date().getHours();
+const guclu = H.filter(h => h.etiket === "Güçlü sinyal");
+const yukselen = H.filter(h => h.degisim_yuzde > 0).length, dusen = H.filter(h => h.degisim_yuzde < 0).length;
+$("guncel").textContent = "Veriler: " + V.guncelleme;
+$("giris").innerHTML = `${saat < 12 ? "Günaydın" : saat < 18 ? "İyi günler" : "İyi akşamlar"} Mert.<span>${guclu.length ? `Bugün ${guclu.length} hisse öne çıkıyor.` : "Bugün öne çıkan bir hisse yok."}</span>`;
+const M = V.madenler || [], B = V.bist || [];
+const gram = M.find(x => x.sembol === "GRAM"), xu = B.find(x => x.sembol === "XU100");
+$("ozet").innerHTML = (guclu.length ? `Güçlü sinyal verenler: <strong>${liste(guclu.map(h => h.sembol))}</strong>. ` : "") +
+  `En yüksek puan ${H[0].puan} ile <strong>${esc(H[0].ad)}</strong> hissesinde. Takip ettiğin ${H.length} hisseden ${yukselen} tanesi son işlem gününde yükseldi, ${dusen} tanesi düştü.` +
+  (gram?.fiyat ? ` Gram altın <strong>${sayi(gram.fiyat, 0)} TL</strong> (${renkli(gram.degisim_yuzde)})` : "") +
+  (xu?.fiyat ? `${gram?.fiyat ? "," : ""} BIST 100 <strong>${sayi(xu.fiyat, 0)}</strong> puan (${renkli(xu.degisim_yuzde)}).` : gram?.fiyat ? "." : "");
+
+// --- puan cetveli ---
+const ALT = Math.min(40, Math.floor((Math.min(...H.map(h => h.puan ?? 100)) - 5) / 10) * 10);
+const xp = p => (p - ALT) / (100 - ALT) * 100;
+function cetvel() {
+  const satirSon = [], yer = [], bosluk = 50 / $("cetvel").clientWidth * 100;  // etiket ~50px, çakışmasın
+  [...H].filter(h => h.puan != null).sort((a, b) => a.puan - b.puan).forEach(h => {
+    const x = xp(h.puan); let r = satirSon.findIndex(s => x - s > bosluk);
+    if (r < 0) { r = satirSon.length; satirSon.push(x); } else satirSon[r] = x;
+    yer.push([h, x, r]);
+  });
+  const SATIR = 36, yuk = satirSon.length * SATIR + 34;
+  const bolge = (a, b, v, ad) => `<div style="width:${xp(b) - xp(a)}%;background:var(${v})"><span class="bolge-ad" style="color:var(${v === "--bolge-g" ? "--iyi" : v === "--bolge-i" ? "--orta" : "--kotu"})">${ad}</span></div>`;
+  $("cetvel").style.height = yuk + 26 + "px";
+  $("cetvel").innerHTML =
+    `<div class="bolgeler">${bolge(ALT, 60, "--bolge-z", "▼ Zayıf")}${bolge(60, 75, "--bolge-i", "● İzle")}${bolge(75, 100, "--bolge-g", "▲ Güçlü")}</div>` +
+    yer.map(([h, x, r]) => `<button class="nokta" data-s="${h.sembol}" style="left:${x}%;bottom:${26 + 6 + r * SATIR}px" aria-label="${esc(h.ad)}, puan ${h.puan}" title="${esc(h.ad)}: ${h.puan}">${h.sembol}<i></i></button>`).join("") +
+    `<div class="eksen">${[...Array((100 - ALT) / 10 + 1)].map((_, i) => `<span style="left:${xp(ALT + i * 10)}%">${ALT + i * 10}</span>`).join("")}</div>`;
+  if (secili) document.querySelectorAll(".nokta").forEach(el => el.classList.toggle("secili", el.dataset.s === secili));
+}
+let gen = 0;
+addEventListener("resize", () => { if (innerWidth !== gen) { gen = innerWidth; cetvel(); } });
+
+// --- neden listesi ---
+function neden(h) {
+  const o = h.oneri, t = analistToplam(o), m = [];
+  if (t) m.push(`${t} analistten ${o.strongBuy + o.buy} al, ${o.hold} tut, ${o.sell + o.strongSell} sat diyor`);
+  if (h.getiri_13h != null) m.push(`Son 13 haftada ${yzd(h.getiri_13h, 1)}`);
+  if (h.hafta52_yuksek && h.fiyat) { const u = (h.hafta52_yuksek - h.fiyat) / h.hafta52_yuksek * 100;
+    m.push(u < 1 ? "52 haftanın zirvesinde" : `52 haftalık zirvenin %${sayi(u, 0)} altında`); }
+  return m;
+}
+$("one").innerHTML = H.slice(0, 3).map(h => `
+  <button data-s="${h.sembol}" aria-label="${esc(h.ad)} ayrıntısını aç">
+    <div class="bas"><div><div class="sem">${h.sembol}</div><div class="ad">${esc(h.ad)}</div></div>${sinyal(h)}</div>
+    <div class="buyuk">${h.puan}<small> / 100 puan</small></div>
+    <ul class="neden">${neden(h).map(n => `<li>${n}</li>`).join("")}</ul>
+  </button>`).join("");
+
+// --- tablo + filtre ---
+const GRUP = [["Tümü", () => true], ["Güçlü", h => h.etiket === "Güçlü sinyal"], ["İzle", h => h.etiket === "İzle"], ["Zayıf", h => h.etiket === "Zayıf"]];
+let grup = 0;
+function filtre() {
+  $("filtre").innerHTML = GRUP.map(([ad, f], i) => `<button aria-pressed="${i === grup}" data-g="${i}">${ad} ${H.filter(f).length}</button>`).join("");
+  $("satirlar").innerHTML = H.filter(GRUP[grup][1]).map(h => {
+    const t = analistToplam(h.oneri), al = t ? (h.oneri.strongBuy + h.oneri.buy) / t * 100 : null;
+    const f = dun?.[h.sembol]?.puan != null && h.puan != null ? h.puan - dun[h.sembol].puan : null;
+    return `<tr data-s="${h.sembol}" tabindex="0">
+      <td><b>${h.sembol}</b><span class="ad">${esc(h.ad)}</span></td><td>${sinyal(h)}</td>
+      <td><span class="puan-hc">${h.puan ?? "–"}</span>${f ? `<span class="fark ${f > 0 ? "art" : "eks"}" title="Düne göre">${f > 0 ? "+" : "−"}${Math.abs(f)}</span>` : ""}</td>
+      <td>$${sayi(h.fiyat)}</td><td>${renkli(h.degisim_yuzde)}</td><td class="gizle-m">${renkli(h.getiri_13h, 1)}</td>
+      <td class="gizle-m">${al == null ? "–" : `<span class="al-oran"><span class="mini"><i style="width:${al}%"></i></span>%${sayi(al, 0)}</span>`}</td>
+      <td class="gizle-m">${sayi(h.fk, 1)}</td></tr>`;
+  }).join("");
+  document.querySelectorAll("#satirlar tr").forEach(tr => tr.classList.toggle("secili", tr.dataset.s === secili));
+}
+
+// --- detay ---
+let secili, grafikler = [];
+function goster(s) {
+  secili = s;
+  const h = H.find(x => x.sembol === s), o = h.oneri, t = analistToplam(o);
+  document.querySelectorAll("[data-s]").forEach(el => el.classList.toggle("secili", el.dataset.s === s));
+  const konum = h.hafta52_yuksek > h.hafta52_dusuk ? Math.max(0, Math.min(100, (h.fiyat - h.hafta52_dusuk) / (h.hafta52_yuksek - h.hafta52_dusuk) * 100)) : null;
+  const A = [["Güçlü al", o?.strongBuy, "--a-gal"], ["Al", o?.buy, "--a-al"], ["Tut", o?.hold, "--a-tut"], ["Sat", o?.sell, "--a-sat"], ["Güçlü sat", o?.strongSell, "--a-gsat"]];
+  const bil = (ad, v) => `<div class="bilesen"><span>${ad}</span><span class="ray"><i style="width:${v ?? 0}%"></i></span><span>${v ?? "–"}</span></div>`;
+  $("detay").innerHTML = `
+    <div class="kutu">
+      <div class="d-bas">${h.logo ? `<img src="${esc(h.logo)}" alt="" onerror="this.remove()">` : ""}
+        <div><div class="sem">${h.sembol}</div><div class="ad">${esc(h.ad)}${h.sektor ? ", " + esc(h.sektor) : ""}</div></div>
+        <div class="d-fiyat"><b>$${sayi(h.fiyat)}</b><span title="Son işlem günündeki değişim">${renkli(h.degisim_yuzde)}</span></div></div>
+      <h3>Puan neden ${h.puan}?</h3>
+      <p class="denklem">${h.analist_puan != null && h.momentum_puan != null
+        ? `Analist puanı <b>${h.analist_puan}</b> × %60 + momentum puanı <b>${h.momentum_puan}</b> × %40 = <b>${h.puan}</b>. ${sinyal(h)}`
+        : `Eksik veri yüzünden puan tek bileşenden hesaplandı. ${sinyal(h)}`}${dun?.[s]?.puan != null ? ` Dün ${dun[s].puan} idi.` : ""}</p>
+      ${bil("Analist görüşü", h.analist_puan)}${bil("Fiyat momentumu", h.momentum_puan)}
+      <div class="blok"><h3>Analistler ne diyor?</h3>
+        ${t ? `<div class="yigin" role="img" aria-label="${A.map(([a, n]) => `${a} ${n}`).join(", ")}">${A.filter(([, n]) => n).map(([a, n, r]) => `<i style="flex:${n};background:var(${r})" title="${a}: ${n}"></i>`).join("")}</div>
+        <div class="lejant">${A.map(([a, n, r]) => `<span><i style="background:var(${r})"></i>${a} ${n}</span>`).join("")}</div>
+        <p class="alt" style="margin:8px 0 0">${t} analistin ${new Date(o.period).toLocaleDateString("tr-TR", {month: "long", year: "numeric"})} tavsiyeleri.</p>` : `<p class="alt">Analist verisi yok.</p>`}
+      </div>
+      <div class="blok"><h3>Fiyat geçmişi</h3>
+        ${gunler.length < 2 ? `<div class="bos">Sistem her sabah bir gün kaydediyor, şu an ${gunler.length} gün var. Grafik ikinci günden itibaren çizilecek.</div>`
+          : `<div class="grafik"><canvas id="g-fiyat" aria-label="${h.sembol} günlük fiyat"></canvas></div><h3 style="margin-top:18px">Puan geçmişi</h3><div class="grafik"><canvas id="g-puan" aria-label="${h.sembol} günlük puan"></canvas></div>`}
+      </div>
+    </div>
+    <div class="kutu">
+      <h3>52 haftalık aralık</h3>
+      ${konum == null ? `<p class="alt">Veri yok.</p>` : `<div class="aralik"><i style="left:${konum}%"></i><span style="left:${Math.max(12, Math.min(88, konum))}%">bugün $${sayi(h.fiyat)}</span></div>
+      <div class="uclar"><span>en düşük $${sayi(h.hafta52_dusuk)}</span><span>en yüksek $${sayi(h.hafta52_yuksek)}</span></div>`}
+      <div class="blok"><dl>
+        <dt>Piyasa değeri<small>Şirketin borsadaki toplam değeri</small></dt><dd>${h.piyasa_degeri ? sayi(h.piyasa_degeri / 1000, 0) + " milyar $" : "–"}</dd>
+        <dt>52 haftalık getiri<small>Bir yıl önce alsaydın</small></dt><dd>${renkli(h.getiri_52h, 1)}</dd>
+        <dt>F/K<small>Fiyat, yıllık kârın kaç katı</small></dt><dd>${sayi(h.fk, 1)}</dd>
+        <dt>Beta<small>1'den büyükse piyasadan oynak</small></dt><dd>${sayi(h.beta)}</dd>
+        <dt>Temettü verimi<small>Yıllık nakit dağıtım / fiyat</small></dt><dd>${h.temettu == null ? "–" : "%" + sayi(h.temettu)}</dd>
+      </dl></div>
+      <div class="blok"><h3>Son haberler</h3>
+        ${h.haberler.length ? h.haberler.map(n => `<a class="haber" href="${esc(n.url)}" target="_blank" rel="noopener"><span class="h-bas">${esc(n.baslik)}</span><span class="h-kay">${esc(n.kaynak)}, ${new Date(n.zaman * 1000).toLocaleDateString("tr-TR", {day: "numeric", month: "long"})}</span></a>`).join("") : '<p class="alt">Son 3 günde haber yok.</p>'}
+      </div>
+    </div>`;
+  grafikler.forEach(g => g.destroy()); grafikler = [];
+  if (gunler.length < 2 || typeof Chart === "undefined") return;
+  const etiket = gunler.map(g => g.slice(5).split("-").reverse().join("."));
+  const cizgi = (id, ad, veri, y) => grafikler.push(new Chart($(id), {
+    type: "line",
+    data: {labels: etiket, datasets: [{label: ad, data: veri, borderColor: css("--vurgu"), backgroundColor: css("--vurgu"), borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, tension: .25}]},
+    options: {maintainAspectRatio: false, interaction: {mode: "index", intersect: false}, plugins: {legend: {display: false}},
+      scales: {x: {ticks: {color: css("--soluk")}, grid: {display: false}, border: {color: css("--eksen")}},
+               y: {...y, ticks: {color: css("--soluk")}, grid: {color: css("--cizgi")}, border: {display: false}}}}
+  }));
+  cizgi("g-fiyat", "Fiyat ($)", gunler.map(g => V.gecmis[g][s]?.fiyat ?? null), {});
+  cizgi("g-puan", "Puan", gunler.map(g => V.gecmis[g][s]?.puan ?? null), {min: 0, max: 100});
+}
+
+document.addEventListener("click", e => {
+  const g = e.target.closest("[data-g]");
+  if (g) { grup = +g.dataset.g; filtre(); return; }
+  const el = e.target.closest("[data-s]");
+  if (!el || el.closest("#detay")) return;
+  goster(el.dataset.s);
+  if (!el.closest("tbody")) $("detay").scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"});
+});
+document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches("tbody tr")) goster(e.target.dataset.s); });
+
+// --- maden ve BIST ---
+const fiyatYaz = x => x.para === "USD" ? `$${sayi(x.fiyat)}` : x.sembol.startsWith("XU") ? `${sayi(x.fiyat, 0)}<small>puan</small>` : `${sayi(x.fiyat, x.fiyat >= 1000 ? 0 : 2)} ₺`;
+function seyir(x) {
+  const s = x.seyir || [];
+  if (s.length < 2) return "";
+  const lo = Math.min(...s), hi = Math.max(...s), y = v => hi === lo ? 50 : 96 - (v - lo) / (hi - lo) * 92;
+  const n = s.length - 1, son = s[n];
+  return `<svg class="seyir" viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Son 3 ay: en düşük ${sayi(lo)}, en yüksek ${sayi(hi)}, bugün ${sayi(son)}">
+    <title>Son 3 ay: en düşük ${sayi(lo)}, en yüksek ${sayi(hi)}</title>
+    <polyline points="${s.map((v, i) => `${(i / n * 100).toFixed(2)},${y(v).toFixed(2)}`).join(" ")}"/></svg>`;
+}
+const kart = (x, vurgulu) => x.fiyat == null ? `<div class="pk"><div class="ad">${esc(x.ad)}</div><p class="alt">Veri alınamadı.</p></div>` : `
+  <div class="pk${vurgulu ? " vurgulu" : ""}">
+    <div><div class="bas"><span class="ad">${esc(x.ad)}</span>${renkli(x.degisim_yuzde)}</div>
+      <div class="deger">${fiyatYaz(x)}</div></div>
+    <div>${seyir(x)}
+    <div class="donem"><span>1 ay<b>${renkli(x.getiri_1a, 1)}</b></span><span>3 ay<b>${renkli(x.getiri_3a, 1)}</b></span><span>1 yıl<b>${renkli(x.getiri_1y, 1)}</b></span></div></div>
+  </div>`;
+$("maden-kart").innerHTML = M.length ? M.map(x => kart(x, x.sembol === "GRAM")).join("") : '<p class="alt">Maden verisi alınamadı.</p>';
+$("bist-endeks").innerHTML = xu ? kart(xu) : "";
+$("bist-satir").innerHTML = B.filter(x => x !== xu).map(x => `<tr>
+  <td><b>${x.sembol}</b><span class="ad">${esc(x.ad)}</span></td>
+  <td>${x.fiyat == null ? "–" : fiyatYaz(x)}</td><td>${renkli(x.degisim_yuzde)}</td>
+  <td class="gizle-m">${renkli(x.getiri_1a, 1)}</td><td class="gizle-m">${renkli(x.getiri_3a, 1)}</td><td>${renkli(x.getiri_1y, 1)}</td>
+  <td class="gizle-m">${seyir(x)}</td></tr>`).join("") || '<tr><td colspan="7">BIST verisi alınamadı.</td></tr>';
+
+gen = innerWidth;
+cetvel();
+filtre();
+goster(H[0].sembol);
+$("piyasa").innerHTML = V.piyasa_haber.map(n => `<a class="haber" href="${esc(n.url)}" target="_blank" rel="noopener"><span class="h-bas">${esc(n.baslik)}</span><span class="h-kay">${esc(n.kaynak)}</span></a>`).join("") || '<p class="alt">Haber yok.</p>';
+</script>
+</body>
+</html>
